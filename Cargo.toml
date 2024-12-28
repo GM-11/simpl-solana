@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/simpl-solana-backend"
+]
+resolver = "2"

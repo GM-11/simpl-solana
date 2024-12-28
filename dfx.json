@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "simpl-solana-backend": {
+      "candid": "src/simpl-solana-backend/simpl-solana-backend.did",
+      "package": "simpl-solana-backend",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
