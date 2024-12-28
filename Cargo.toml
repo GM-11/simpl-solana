@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "src/simpl-solana-backend"
-]
+members = ["src/backend"]
 resolver = "2"
