@@ -19,7 +19,7 @@ pub async fn pay_to_treasury(amount_in_inr: u64, auth: String) -> String {
         },
         HttpHeader {
             name: "Authorization".to_string(),
-            value: format!("Basic {}", auth),
+            value: auth,
         },
     ];
 

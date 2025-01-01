@@ -19,11 +19,15 @@ pub struct PayoutResponse {
 
 pub struct Config {
     pub api_key_encrypted: String,
+    pub idempotent_key: String,
 }
 
 impl Config {
-    pub fn new(api_key_encrypted: String) -> Self {
-        Self { api_key_encrypted }
+    pub fn new(api_key_encrypted: String, idempotent_key: String) -> Self {
+        Self {
+            api_key_encrypted,
+            idempotent_key,
+        }
     }
     async fn create_contact(&self, contact: Contact) -> Result<String, String> {
         let url = format!("{}contacts", BASE_URL);
