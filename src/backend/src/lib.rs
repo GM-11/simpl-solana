@@ -1,10 +1,24 @@
+use std::{cell::RefCell, collections::HashMap};
+
+use candid::CandidType;
 use ic_cdk::api::management_canister::http_request::{
     http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
 };
+use serde::Deserialize;
 use structs::{Instruction, SolanaApiParams, SolanaApiRequest};
 
 pub mod helpers;
+pub mod razorpay;
 pub mod structs;
+
+#[derive(CandidType, Deserialize)]
+pub struct InitArgs {
+    pub razorpay_api_key_encrypted: String,
+}
+
+thread_local! {
+    static API_KEYS: RefCell<HashMap<String, String>> = RefCell::new(HashMap::default());
+}
 
 #[ic_cdk::update]
 async fn transfer_sol(from: String, to: String, lamports: u64) -> Result<Vec<u8>, String> {
@@ -83,6 +97,41 @@ pub async fn send_signed_transaction(signed_tx: Vec<u8>) -> String {
             format!("The http_request resulted into error. RejectionCode: {r:?}, Error: {m}")
         }
     }
+}
+
+#[ic_cdk::update]
+pub async fn transfer_fiat(
+    name: String,
+    email: String,
+    contact: String,
+    account_number: String,
+    ifsc: String,
+    amount: u64,
+) -> String {
+    let key = "razorpay".to_string();
+    let api_keys = API_KEYS.with(|api_keys| api_keys.borrow_mut().clone());
+    let api_key_encrypted = api_keys.get(&key).unwrap();
+
+    let config = razorpay::Config::new(api_key_encrypted.clone());
+
+    let result = config
+        .pay(name, email, contact, account_number, ifsc, amount)
+        .await;
+
+    match result {
+        Ok(res) => res,
+        Err(err) => err,
+    }
+}
+
+#[ic_cdk::init]
+pub fn init(args: InitArgs) {
+    let api_key = args.razorpay_api_key_encrypted;
+    API_KEYS.with(|api_keys| {
+        api_keys
+            .borrow_mut()
+            .insert("razorpay".to_string(), api_key)
+    });
 }
 
 ic_cdk::export_candid!();
