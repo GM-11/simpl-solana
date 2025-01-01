@@ -14,6 +14,7 @@ pub mod structs;
 #[derive(CandidType, Deserialize)]
 pub struct InitArgs {
     pub razorpay_api_key_encrypted: String,
+    pub idempotent_key_encrypted: String,
 }
 
 thread_local! {
@@ -47,7 +48,7 @@ async fn transfer_sol(from: String, to: String, lamports: u64) -> Result<Vec<u8>
 
     match unsigned {
         Ok(tx) => Ok(helpers::serialize_unsigned_transaction(&tx)),
-        Err(err) => Err(format!("Error creating unsigned transaction: {err}")),
+        Err(err) => Err(format!("Error creating unsigned transaction: {}", err)),
     }
 }
 
@@ -109,10 +110,12 @@ pub async fn transfer_fiat(
     amount: u64,
 ) -> String {
     let key = "razorpay".to_string();
+    let idempotent_key = "idempotent".to_string();
     let api_keys = API_KEYS.with(|api_keys| api_keys.borrow_mut().clone());
     let api_key_encrypted = api_keys.get(&key).unwrap();
+    let idempotent_key_encrypted = api_keys.get(&idempotent_key).unwrap();
 
-    let config = razorpay::Config::new(api_key_encrypted.clone());
+    let config = razorpay::Config::new(api_key_encrypted.clone(), idempotent_key_encrypted.clone());
 
     let result = config
         .pay(name, email, contact, account_number, ifsc, amount)
@@ -127,10 +130,14 @@ pub async fn transfer_fiat(
 #[ic_cdk::init]
 pub fn init(args: InitArgs) {
     let api_key = args.razorpay_api_key_encrypted;
+    let idempotent_key = args.idempotent_key_encrypted;
     API_KEYS.with(|api_keys| {
         api_keys
             .borrow_mut()
-            .insert("razorpay".to_string(), api_key)
+            .insert("razorpay".to_string(), api_key);
+        api_keys
+            .borrow_mut()
+            .insert("idempotent".to_string(), idempotent_key)
     });
 }
 
