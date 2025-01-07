@@ -9,3 +9,4 @@ crate-type = ["cdylib"]
 [dependencies]
 candid = "0.10.11"
 ic-cdk = "0.17.1"
+ic-solana = { path = "../ic-solana" }
