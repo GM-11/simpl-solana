@@ -1,4 +1,5 @@
 use std::str::FromStr;
+pub mod constants;
 
 use ic_solana::{
     rpc_client::{ConsensusStrategy, RpcApi, RpcClient, RpcClientConfig},
@@ -8,9 +9,12 @@ use ic_solana::{
         RpcSendTransactionConfig, Transaction,
     },
 };
+use razorpay::PayoutArgs;
 
 #[ic_cdk::update]
-pub async fn transfer_sol(from: String, to: String, amount: u64) -> String {
+pub async fn transfer_sol(to: String, amount: u64) -> String {
+    let from = Pubkey::from_str(constants::SOLANA_TREASURY_ADDRESS).unwrap();
+
     let cluster = Cluster::Localnet;
     let rpc = RpcApi::new(cluster.url());
     ic_cdk::api::print(cluster.url());
@@ -39,7 +43,6 @@ pub async fn transfer_sol(from: String, to: String, amount: u64) -> String {
         min_context_slot: None,
     };
 
-    let from = Pubkey::from_str(from.as_str()).expect("Invalid pubkey");
     let to = Pubkey::from_str(to.as_str()).expect("Invalid pubkey");
 
     let transfer_ix = transfer(&from, &to, amount);
@@ -55,7 +58,14 @@ pub async fn transfer_sol(from: String, to: String, amount: u64) -> String {
 
     tx.set_latest_blockhash(&BlockHash::from_str(latest_blockhash.as_str()).unwrap());
 
-    let keypair: [u8; 64] = [0u8; 64];
+    let keypair_string = std::env::var("SOLANA_TREASURY_KEYPAIR").unwrap();
+
+    let keypair: [u8; 64] = keypair_string
+        .split(',')
+        .map(|s| s.parse::<u8>().unwrap())
+        .collect::<Vec<u8>>()
+        .try_into()
+        .unwrap();
 
     let secret_key: [u8; 32] = keypair[0..32].try_into().unwrap();
     tx.sign(0, &secret_key);
@@ -67,6 +77,15 @@ pub async fn transfer_sol(from: String, to: String, amount: u64) -> String {
     match signature {
         Ok(sig) => sig.to_string(),
         Err(err) => err.to_string(),
+    }
+}
+
+#[ic_cdk::update]
+pub async fn transfer_inr(args: PayoutArgs) -> String {
+    let result = razorpay::payout(args).await;
+    match result {
+        Ok(res) => res,
+        Err(e) => e,
     }
 }
 

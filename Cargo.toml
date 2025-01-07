@@ -1,5 +1,5 @@
 [workspace]
-members = ["src/protocol", "src/ic-solana"]
+members = ["src/protocol", "src/ic-solana", "src/razorpay"]
 resolver = "2"
 
 [workspace.dependencies]

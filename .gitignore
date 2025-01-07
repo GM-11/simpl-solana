@@ -25,3 +25,5 @@ dist/
 # environment variables
 .env
 build.sh
+keypair.json
+try

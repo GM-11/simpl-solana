@@ -1,1 +1,12 @@
-service : { transfer_sol : (text, text, nat64) -> (text) }
+type PayoutArgs = record {
+  contact : text;
+  ifsc : text;
+  name : text;
+  email : text;
+  account_number : text;
+  amount : nat64;
+};
+service : {
+  transfer_inr : (PayoutArgs) -> (text);
+  transfer_sol : (text, nat64) -> (text);
+}
