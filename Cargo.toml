@@ -1,5 +1,6 @@
 [workspace]
-members = [ "src/protocol",
-    "src/simpl-solana-backend"
-]
+members = ["src/protocol", "src/ic-solana"]
 resolver = "2"
+
+[workspace.dependencies]
+ic-solana = { path = "src/ic-solana" }

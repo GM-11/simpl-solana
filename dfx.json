@@ -1,8 +1,8 @@
 {
   "canisters": {
-    "simpl-solana-backend": {
-      "candid": "src/simpl-solana-backend/simpl-solana-backend.did",
-      "package": "simpl-solana-backend",
+    "protocol": {
+      "candid": "src/protocol/protocol.did",
+      "package": "protocol",
       "type": "rust"
     }
   },

@@ -1,5 +1,6 @@
 # Various IDEs and Editors
 .vscode/
+.zed/
 .idea/
 **/*~
 
@@ -23,3 +24,4 @@ dist/
 
 # environment variables
 .env
+build.sh
