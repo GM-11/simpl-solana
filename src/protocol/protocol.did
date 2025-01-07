@@ -8,5 +8,6 @@ type PayoutArgs = record {
 };
 service : {
   transfer_inr : (PayoutArgs) -> (text);
-  transfer_sol : (text, nat64) -> (text);
+  transfer_sol_from_treasury : (text, nat64) -> (text);
+  transfer_sol_to_treasury : (text, nat64, blob) -> (text);
 }

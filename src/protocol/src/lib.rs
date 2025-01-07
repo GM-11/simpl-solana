@@ -12,8 +12,29 @@ use ic_solana::{
 use razorpay::PayoutArgs;
 
 #[ic_cdk::update]
-pub async fn transfer_sol(to: String, amount: u64) -> String {
-    let from = Pubkey::from_str(constants::SOLANA_TREASURY_ADDRESS).unwrap();
+pub async fn transfer_sol_from_treasury(to: String, amount: u64) -> String {
+    let keypair_string = option_env!("SOLANA_TREASURY_KEYPAIR").unwrap();
+
+    let keypair: [u8; 64] = keypair_string
+        .split(',')
+        .map(|s| s.parse::<u8>().unwrap())
+        .collect::<Vec<u8>>()
+        .try_into()
+        .unwrap();
+
+    let from = Pubkey::from_str(constants::SOLANA_TREASURY_ADDRESS).expect("Invalid pubkey");
+    transfer_sol(from.to_string(), to, amount, keypair).await
+}
+
+#[ic_cdk::update]
+pub async fn transfer_sol_to_treasury(from: String, amount: u64, keypair: Vec<u8>) -> String {
+    let to = Pubkey::from_str(constants::SOLANA_TREASURY_ADDRESS).expect("Invalid pubkey");
+    let keypair: [u8; 64] = keypair.as_slice().try_into().unwrap();
+    transfer_sol(from, to.to_string(), amount, keypair).await
+}
+
+pub async fn transfer_sol(from: String, to: String, amount: u64, keypair: [u8; 64]) -> String {
+    let from = Pubkey::from_str(from.as_str()).expect("Invalid pubkey");
 
     let cluster = Cluster::Localnet;
     let rpc = RpcApi::new(cluster.url());
@@ -57,17 +78,6 @@ pub async fn transfer_sol(to: String, amount: u64) -> String {
         .blockhash;
 
     tx.set_latest_blockhash(&BlockHash::from_str(latest_blockhash.as_str()).unwrap());
-
-    let keypair_string = option_env!("SOLANA_TREASURY_KEYPAIR").unwrap();
-
-    let keypair: [u8; 64] = keypair_string
-        .split(',')
-        .map(|s| s.parse::<u8>().unwrap())
-        .collect::<Vec<u8>>()
-        .try_into()
-        .unwrap();
-
-    ic_cdk::api::print(format!("{:?}", keypair));
 
     let secret_key: [u8; 32] = keypair[0..32].try_into().unwrap();
     tx.sign(0, &secret_key);
