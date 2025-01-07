@@ -1,0 +1,1 @@
+service : { transfer_sol : (text, text, nat64) -> (text) }
