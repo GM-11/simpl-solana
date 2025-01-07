@@ -58,7 +58,7 @@ pub async fn transfer_sol(to: String, amount: u64) -> String {
 
     tx.set_latest_blockhash(&BlockHash::from_str(latest_blockhash.as_str()).unwrap());
 
-    let keypair_string = std::env::var("SOLANA_TREASURY_KEYPAIR").unwrap();
+    let keypair_string = option_env!("SOLANA_TREASURY_KEYPAIR").unwrap();
 
     let keypair: [u8; 64] = keypair_string
         .split(',')
@@ -66,6 +66,8 @@ pub async fn transfer_sol(to: String, amount: u64) -> String {
         .collect::<Vec<u8>>()
         .try_into()
         .unwrap();
+
+    ic_cdk::api::print(format!("{:?}", keypair));
 
     let secret_key: [u8; 32] = keypair[0..32].try_into().unwrap();
     tx.sign(0, &secret_key);
