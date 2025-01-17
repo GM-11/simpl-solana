@@ -4,7 +4,7 @@ use ic_cdk::api::management_canister::http_request::{
 };
 use serde::Deserialize;
 
-pub const RAZORPAY_BASE_URL: &str = "https://api.razorpay.com/v1/";
+use crate::RAZORPAY_BASE_URL;
 
 async fn create_contact(name: String, email: String, contact: String) -> Result<String, String> {
     let headers = vec![HttpHeader {
