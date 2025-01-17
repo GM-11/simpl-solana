@@ -1,1 +1,0 @@
-pub const SOLANA_TREASURY_ADDRESS: &str = "29HY6PqigFtdgyBTiiQQ5XCd3MxrXWSFtMWysqgHK5eJ";
