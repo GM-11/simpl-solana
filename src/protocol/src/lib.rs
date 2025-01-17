@@ -1,6 +1,7 @@
 use std::str::FromStr;
 pub mod solana_transactions;
 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use ic_solana::types::Pubkey;
 use razorpay::PayoutArgs;
 use solana_transactions::transfer_sol;
@@ -40,7 +41,13 @@ pub async fn transfer_inr(args: PayoutArgs) -> String {
 
 #[ic_cdk::update]
 pub async fn create_order(amount: u64) -> String {
-    let result = razorpay::create_order(amount).await;
+    let razorpay_public_key = option_env!("RAZORPAY_API_KEY").expect("RAZORPAY_API_KEY not set");
+    let razorpay_secret_key =
+        option_env!("RAZORPAY_SECRET_KEY").expect("RAZORPAY_SECRET_KEY not set");
+    let auth_string = format!("{}:{}", razorpay_public_key, razorpay_secret_key);
+
+    let encoded_auth = BASE64.encode(auth_string.as_bytes());
+    let result = razorpay::create_order(amount, encoded_auth).await;
     match result {
         Ok(res) => res,
         Err(e) => e,

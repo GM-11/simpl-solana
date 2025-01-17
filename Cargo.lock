@@ -892,6 +892,7 @@ dependencies = [
 name = "protocol"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "candid",
  "ic-cdk",
  "ic-solana",
