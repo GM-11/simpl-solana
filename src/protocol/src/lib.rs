@@ -32,7 +32,15 @@ pub async fn transfer_sol_to_treasury(from: String, amount: u64, keypair: Vec<u8
 
 #[ic_cdk::update]
 pub async fn transfer_inr(args: PayoutArgs) -> String {
-    let result = razorpay::payout(args).await;
+    let razorpay_public_key = option_env!("RAZORPAY_API_KEY").expect("RAZORPAY_API_KEY not set");
+    let razorpay_secret_key =
+        option_env!("RAZORPAY_SECRET_KEY").expect("RAZORPAY_SECRET_KEY not set");
+    let razorpay_x_acccount =
+        option_env!("RAZORPAY_X_ACCCOUNT").expect("RAZORPAY_X_ACCCOUNT not set");
+    let auth_string = format!("{}:{}", razorpay_public_key, razorpay_secret_key);
+
+    let encoded_auth = BASE64.encode(auth_string.as_bytes());
+    let result = razorpay::payout(args, razorpay_x_acccount.to_string(), encoded_auth).await;
     match result {
         Ok(res) => res,
         Err(e) => e,

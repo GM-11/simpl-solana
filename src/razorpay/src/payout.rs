@@ -6,11 +6,22 @@ use serde::Deserialize;
 
 use crate::RAZORPAY_BASE_URL;
 
-async fn create_contact(name: String, email: String, contact: String) -> Result<String, String> {
-    let headers = vec![HttpHeader {
-        name: "Content-Type".to_string(),
-        value: "application/json".to_string(),
-    }];
+async fn create_contact(
+    name: String,
+    email: String,
+    contact: String,
+    auth: String,
+) -> Result<String, String> {
+    let headers = vec![
+        HttpHeader {
+            name: "Content-Type".to_string(),
+            value: "application/json".to_string(),
+        },
+        HttpHeader {
+            name: "Authorization".to_string(),
+            value: format!("Basic {}", auth),
+        },
+    ];
 
     let body = serde_json::json!({
         "name": name,
@@ -29,12 +40,13 @@ async fn create_contact(name: String, email: String, contact: String) -> Result<
         transform: None,
     };
 
-    let response = http_request(request, 1_000_000).await;
+    let response = http_request(request, 1_603_150_400).await;
 
     match response {
         Ok(response) => {
             let response_body = String::from_utf8(response.0.body).unwrap();
             let response_json: serde_json::Value = serde_json::from_str(&response_body).unwrap();
+            ic_cdk::println!("response_json: {:?}", response_json);
             let id = response_json["id"].as_str().unwrap();
 
             Ok(id.to_string())
@@ -48,11 +60,18 @@ async fn create_fund_account(
     ifsc: String,
     account_number: String,
     contact_id: String,
+    auth: String,
 ) -> Result<String, String> {
-    let headers = vec![HttpHeader {
-        name: "Content-Type".to_string(),
-        value: "application/json".to_string(),
-    }];
+    let headers = vec![
+        HttpHeader {
+            name: "Content-Type".to_string(),
+            value: "application/json".to_string(),
+        },
+        HttpHeader {
+            name: "Authorization".to_string(),
+            value: format!("Basic {}", auth),
+        },
+    ];
 
     let body = serde_json::json!({
         "contact_id": contact_id,
@@ -75,12 +94,13 @@ async fn create_fund_account(
         transform: None,
     };
 
-    let response = http_request(request, 1_000_000).await;
+    let response = http_request(request, 1_603_184_000).await;
 
     match response {
         Ok(response) => {
             let response_body = String::from_utf8(response.0.body).unwrap();
             let response_json: serde_json::Value = serde_json::from_str(&response_body).unwrap();
+            ic_cdk::println!("response_json: {:?}", response_json);
             let id = response_json["id"].as_str().unwrap();
 
             Ok(id.to_string())
@@ -93,11 +113,18 @@ async fn create_payout(
     account_number: String,
     fund_account_id: String,
     amount: u64,
+    auth: String,
 ) -> Result<String, String> {
-    let headers = vec![HttpHeader {
-        name: "Content-Type".to_string(),
-        value: "application/json".to_string(),
-    }];
+    let headers = vec![
+        HttpHeader {
+            name: "Content-Type".to_string(),
+            value: "application/json".to_string(),
+        },
+        HttpHeader {
+            name: "Authorization".to_string(),
+            value: format!("Basic {}", auth),
+        },
+    ];
 
     let body = serde_json::json!({
         "fund_account_id": fund_account_id,
@@ -119,12 +146,13 @@ async fn create_payout(
         transform: None,
     };
 
-    let response = http_request(request, 1_000_000).await;
+    let response = http_request(request, 1_603_172_400).await;
 
     match response {
         Ok(response) => {
             let response_body = String::from_utf8(response.0.body).unwrap();
             let response_json: serde_json::Value = serde_json::from_str(&response_body).unwrap();
+            ic_cdk::println!("response_json: {:?}", response_json);
             let id = response_json["id"].as_str().unwrap();
 
             Ok(id.to_string())
@@ -143,8 +171,13 @@ pub struct PayoutArgs {
     amount: u64,
 }
 
-pub async fn payout(args: PayoutArgs) -> Result<String, String> {
-    let contact_id = create_contact(args.name.clone(), args.email, args.contact).await;
+pub async fn payout(
+    args: PayoutArgs,
+    razorpay_x_acccount: String,
+    auth: String,
+) -> Result<String, String> {
+    let contact_id =
+        create_contact(args.name.clone(), args.email, args.contact, auth.clone()).await;
 
     if contact_id.is_err() {
         return Err(contact_id.err().unwrap());
@@ -157,6 +190,7 @@ pub async fn payout(args: PayoutArgs) -> Result<String, String> {
         args.ifsc,
         args.account_number.clone(),
         contact_id,
+        auth.clone(),
     )
     .await;
 
@@ -166,7 +200,8 @@ pub async fn payout(args: PayoutArgs) -> Result<String, String> {
 
     let fund_account_id = create_fund_account.unwrap();
 
-    let create_payout = create_payout(args.account_number, fund_account_id, args.amount).await;
+    let create_payout =
+        create_payout(razorpay_x_acccount, fund_account_id, args.amount, auth).await;
 
     if create_payout.is_err() {
         return Err(create_payout.err().unwrap());
