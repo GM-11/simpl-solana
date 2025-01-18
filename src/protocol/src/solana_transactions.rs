@@ -1,5 +1,8 @@
 use std::str::FromStr;
 
+use ic_cdk::api::management_canister::http_request::{
+    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
+};
 use ic_solana::{
     rpc_client::{ConsensusStrategy, RpcApi, RpcClient, RpcClientConfig},
     system_instruction::transfer,
@@ -8,8 +11,48 @@ use ic_solana::{
         RpcSendTransactionConfig, Transaction,
     },
 };
+use serde_json::Value;
 
 pub const SOLANA_TREASURY_ADDRESS: &str = "29HY6PqigFtdgyBTiiQQ5XCd3MxrXWSFtMWysqgHK5eJ";
+
+pub async fn get_sol_price(timestamp: u64) -> Result<f64, String> {
+    // 1682978460
+    // 1737212575675693
+    ic_cdk::api::print(format!("fetching price at {}", timestamp));
+    let headers = vec![HttpHeader {
+        name: "User-Agent".to_string(),
+        value: "exchange_rate_canister".to_string(),
+    }];
+    let url = format!(
+        "https://api.exchange.coinbase.com/products/SOL-USD/candles?start={}&end={}&granularity={}",
+        (timestamp.checked_sub(60u64).unwrap()).to_string(),
+        (timestamp.checked_add(60u64).unwrap()).to_string(),
+        60.to_string()
+    );
+
+    let request = CanisterHttpRequestArgument {
+        url,
+        max_response_bytes: None,
+        method: HttpMethod::GET,
+        headers,
+        body: None,
+        transform: None,
+    };
+
+    let response = http_request(request, 1_603_131_200).await;
+
+    match response {
+        Ok(response) => {
+            let response_body = String::from_utf8(response.0.body).unwrap();
+            ic_cdk::api::print(response_body.clone());
+            let response_array: Value = serde_json::from_str(response_body.as_str()).unwrap();
+            let array = &response_array[0];
+
+            Ok(array[4].as_f64().unwrap())
+        }
+        Err(err) => Err(format!("Error creating order: {}", err.1)),
+    }
+}
 
 pub async fn transfer_sol(from: String, to: String, amount: u64, keypair: [u8; 64]) -> String {
     let from = Pubkey::from_str(from.as_str()).expect("Invalid pubkey");

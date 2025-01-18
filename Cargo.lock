@@ -897,6 +897,7 @@ dependencies = [
  "ic-cdk",
  "ic-solana",
  "razorpay",
+ "serde_json",
 ]
 
 [[package]]

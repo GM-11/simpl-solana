@@ -62,4 +62,14 @@ pub async fn create_order(amount: u64) -> String {
     }
 }
 
+#[ic_cdk::update]
+pub async fn get_sol_price() -> String {
+    let timestamp = ic_cdk::api::time().checked_div(1000_000_000u64).unwrap();
+    let price = solana_transactions::get_sol_price(timestamp).await;
+    match price {
+        Ok(price) => price.to_string(),
+        Err(e) => e,
+    }
+}
+
 ic_cdk::export_candid!();
