@@ -4,7 +4,7 @@ pub mod solana_transactions;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use ic_solana::types::Pubkey;
 use razorpay::PayoutArgs;
-use solana_transactions::transfer_sol;
+use solana_transactions::{call_anchor, transfer_sol};
 
 #[ic_cdk::update]
 pub async fn transfer_sol_from_treasury(to: String, amount: u64) -> String {
@@ -70,6 +70,11 @@ pub async fn get_sol_price() -> String {
         Ok(price) => price.to_string(),
         Err(e) => e,
     }
+}
+
+#[ic_cdk::update]
+pub async fn call_anchor_program(from: String, keypair: Vec<u8>) -> String {
+    call_anchor(from, keypair.try_into().expect("Invalid keypair")).await
 }
 
 ic_cdk::export_candid!();
